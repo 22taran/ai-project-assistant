@@ -1,0 +1,1 @@
+# worker uses only stdlib + boto3 (provided by the Lambda runtime)
