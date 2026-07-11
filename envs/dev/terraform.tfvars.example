@@ -1,0 +1,4 @@
+project_name = "kt-assistant"
+aws_region   = "us-east-1"
+environment  = "dev"
+# NOTE: no secrets here. Slack signing secret + bot token go in Secrets Manager.
