@@ -1,4 +1,9 @@
 project_name = "kt-assistant"
 aws_region   = "us-east-1"
 environment  = "dev"
+
+# Names (not values) of pre-existing Secrets Manager secrets. Create the secrets
+# out-of-band; Terraform only references them by name so no value enters state.
+signing_secret_name = "kt-assistant/signing-secret"
+bot_token_name      = "kt-assistant/bot-token"
 # NOTE: no secrets here. Slack signing secret + bot token go in Secrets Manager.

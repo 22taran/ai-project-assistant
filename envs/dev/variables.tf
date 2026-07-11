@@ -20,3 +20,23 @@ variable "environment" {
     error_message = "environment must be one of dev, staging, prod."
   }
 }
+
+variable "embedding_model_id" {
+  type    = string
+  default = "amazon.titan-embed-text-v2:0"
+}
+
+variable "generation_model_id" {
+  type    = string
+  default = "anthropic.claude-haiku-4-5-20251001-v1:0"
+}
+
+variable "signing_secret_name" {
+  type        = string
+  description = "Name of the pre-existing Secrets Manager secret holding the Slack signing secret."
+}
+
+variable "bot_token_name" {
+  type        = string
+  description = "Name of the pre-existing Secrets Manager secret holding the Slack bot token."
+}
