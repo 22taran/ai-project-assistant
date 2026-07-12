@@ -70,3 +70,30 @@ def test_slack_retry_is_acked_without_reinvoking(monkeypatch):
     resp = h.handler(ev, None)
     assert resp["statusCode"] == 200
     invoke.assert_not_called()  # no duplicate worker invocation
+
+def test_bot_message_is_ignored(monkeypatch):
+    invoke = MagicMock()
+    h = _load_handler(monkeypatch, invoke)
+    body = json.dumps({"type": "event_callback",
+                       "event": {"type": "message", "bot_id": "B01", "text": "hi"}})
+    resp = h.handler(_event(body), None)
+    assert resp["statusCode"] == 200
+    invoke.assert_not_called()
+
+def test_subtype_message_is_ignored(monkeypatch):
+    invoke = MagicMock()
+    h = _load_handler(monkeypatch, invoke)
+    body = json.dumps({"type": "event_callback",
+                       "event": {"type": "message", "subtype": "message_changed", "text": "x"}})
+    resp = h.handler(_event(body), None)
+    assert resp["statusCode"] == 200
+    invoke.assert_not_called()
+
+def test_dm_message_is_forwarded(monkeypatch):
+    invoke = MagicMock()
+    h = _load_handler(monkeypatch, invoke)
+    body = json.dumps({"type": "event_callback",
+                       "event": {"type": "message", "channel": "D01", "user": "U01", "text": "hi"}})
+    resp = h.handler(_event(body), None)
+    assert resp["statusCode"] == 200
+    invoke.assert_called_once()

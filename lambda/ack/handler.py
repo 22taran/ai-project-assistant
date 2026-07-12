@@ -50,6 +50,13 @@ def handler(event, context):
     if _get(headers, "x-slack-retry-num"):
         return {"statusCode": 200, "body": "duplicate retry ignored"}
 
+    # Slack's message.im fires on every DM message, including the bot's own
+    # replies and system notices (joins, edits). Drop anything that isn't a
+    # human message, or the bot answers itself in a loop.
+    inner = payload.get("event", {})
+    if inner.get("bot_id") or inner.get("subtype"):
+        return {"statusCode": 200, "body": "ignored non-user event"}
+
     boto3.client("lambda").invoke(
         FunctionName=os.environ["WORKER_FUNCTION_NAME"],
         InvocationType="Event",
