@@ -16,3 +16,12 @@ __pycache__/
 
 # OS
 .DS_Store
+
+# scratch
+.venv/
+.superpowers/
+
+# env / secrets
+.env
+*.env
+bootstrap/.env
