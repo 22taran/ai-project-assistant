@@ -56,7 +56,7 @@ def _post_message(token, channel, text):
         headers={"Authorization": f"Bearer {token}",
                  "Content-Type": "application/json; charset=utf-8"},
     )
-    with urllib.request.urlopen(req, timeout=8) as r:
+    with urllib.request.urlopen(req, timeout=3) as r:
         return r.read()
 
 
@@ -103,11 +103,17 @@ def handler(event, context):
     user = inner.get("user")
     if user not in _roster():
         print(f"unauthorized user {user} team {payload.get('team_id')}")
-        _post_message(
-            _bot_token(),
-            inner.get("channel"),
-            "You're not set up for the project assistant yet — ask your project admin to add you.",
-        )
+        try:
+            _post_message(
+                _bot_token(),
+                inner.get("channel"),
+                "You're not set up for the project assistant yet — ask your project admin to add you.",
+            )
+        except Exception:
+            # Best-effort: don't let a slow/failed Slack or Secrets call error
+            # the invocation. Access control is unaffected — the worker is
+            # never invoked on this path either way.
+            print("failed to post deny reply")
         return {"statusCode": 200, "body": "user not in roster"}
 
     boto3.client("lambda").invoke(

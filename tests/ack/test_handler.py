@@ -138,6 +138,16 @@ def test_roster_cached_within_ttl(monkeypatch):
     fake_ssm = sys.modules["boto3"].client("ssm")
     assert fake_ssm.get_parameter.call_count == 1  # second call served from cache
 
+def test_deny_reply_failure_still_acks(monkeypatch):
+    invoke = MagicMock()
+    h = _load_handler(monkeypatch, invoke, roster_users=("U99",))  # U01 not allowed
+    h._post_message.side_effect = RuntimeError("slack down")
+    body = json.dumps({"type": "event_callback",
+                       "event": {"channel": "D01", "user": "U01", "text": "hi"}})
+    resp = h.handler(_event(body), None)
+    assert resp["statusCode"] == 200
+    invoke.assert_not_called()
+
 def test_ssm_failure_denies(monkeypatch):
     invoke = MagicMock()
     h = _load_handler(monkeypatch, invoke, ssm_raises=True)
