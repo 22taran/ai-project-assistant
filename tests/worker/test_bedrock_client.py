@@ -1,6 +1,6 @@
 import sys, pathlib
 from unittest.mock import MagicMock
-sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[2] / "lambda" / "worker"))
+sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[2] / "src" / "worker"))
 from bedrock_client import retrieve_and_generate
 
 def test_returns_answer_and_citations():

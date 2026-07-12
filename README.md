@@ -68,17 +68,19 @@ Terraform.
 
 ```
 KT-assistant/
-├── modules/
-│   ├── storage/        # docs S3 bucket + S3 Vectors bucket & index
-│   ├── iam/            # least-privilege roles (KB, ack, worker), no wildcards
-│   ├── bedrock-kb/     # knowledge base + S3 data source
-│   └── slack-lambda/   # ack + worker Lambdas, Function URL, DLQ, SSM roster, grants
-├── envs/dev/           # composes the modules, wires ARNs, builds model ARNs
-├── lambda/
-│   ├── ack/            # verify sig, loop guard, roster gate, async-invoke worker
-│   └── worker/         # RetrieveAndGenerate + post to Slack
-├── docs/               # sample project docs to seed the KB
-└── docs/superpowers/   # design specs + implementation plans
+├── infra/
+│   ├── modules/
+│   │   ├── storage/        # docs S3 bucket + S3 Vectors bucket & index
+│   │   ├── iam/            # least-privilege roles (KB, ack, worker), no wildcards
+│   │   ├── bedrock-kb/     # knowledge base + S3 data source
+│   │   └── slack-lambda/   # ack + worker Lambdas, Function URL, DLQ, SSM roster, grants
+│   └── envs/dev/           # composes the modules, wires ARNs, builds model ARNs
+├── src/
+│   ├── ack/                # verify sig, loop guard, roster gate, async-invoke worker
+│   └── worker/             # RetrieveAndGenerate + post to Slack
+├── tests/                  # pytest (ack + worker)
+├── docs/                   # sample project docs to seed the KB
+└── docs/superpowers/       # design specs + implementation plans
 ```
 
 ---
@@ -107,7 +109,7 @@ aws secretsmanager create-secret --name kt-assistant/bot-token \
 
 ### 3. Configure and deploy
 ```bash
-cd envs/dev
+cd infra/envs/dev
 cp terraform.tfvars.example terraform.tfvars
 # set: project_name, aws_region, environment,
 #      signing_secret_name = "kt-assistant/signing-secret"
@@ -124,7 +126,7 @@ KB=$(terraform output -raw knowledge_base_id)
 REGION=us-east-1
 
 # upload your project docs
-aws s3 cp ../../docs/ s3://<project>-<env>-docs/ --recursive --include "*.md" --region $REGION
+aws s3 cp ../../../docs/ s3://<project>-<env>-docs/ --recursive --include "*.md" --region $REGION
 
 # run an ingestion job
 DS=$(aws bedrock-agent list-data-sources --knowledge-base-id $KB --region $REGION \
@@ -195,7 +197,7 @@ Live within the TTL, no deploy. The roster is stored in SSM with Terraform
 
 ## Swapping the generation model
 
-Both model IDs are Terraform variables in `envs/dev/variables.tf`:
+Both model IDs are Terraform variables in `infra/envs/dev/variables.tf`:
 ```hcl
 generation_model_id             = "amazon.nova-lite-v1:0"          # foundation-model (for IAM)
 generation_inference_profile_id = "us.amazon.nova-lite-v1:0"       # profile (RetrieveAndGenerate modelArn)
@@ -218,9 +220,9 @@ for stronger). Embedding model stays Titan v2, so **no re-ingestion** is needed 
 | `"Sending messages to this app has been turned off"` | Tick the **checkbox** under App Home → Messages Tab (not just the toggle), reinstall, then **Cmd+R** the Slack client. |
 | Two answers per question | Slack retried during a cold start. Handled by the retry guard; if it recurs, bump ack Lambda memory to cut cold-start latency. |
 | Empty citations / "cannot find sufficient information" | The KB index has no vectors — run an ingestion job (step 4) and confirm `COMPLETE` with `numberOfDocumentsIndexed > 0`. |
-| Sync fails: `Filterable metadata must have at most 2048 bytes` | The index must mark `AMAZON_BEDROCK_TEXT` + `AMAZON_BEDROCK_METADATA` **non-filterable** (already set in `modules/storage`). |
+| Sync fails: `Filterable metadata must have at most 2048 bytes` | The index must mark `AMAZON_BEDROCK_TEXT` + `AMAZON_BEDROCK_METADATA` **non-filterable** (already set in `infra/modules/storage`). |
 | `on-demand throughput isn't supported for this model` | Use the **inference-profile** ARN (the `us.…` id), not a bare foundation-model ARN. |
-| `Not authorized to call GetInferenceProfile` | The worker role needs `bedrock:GetInferenceProfile` (already granted in `modules/iam`). |
+| `Not authorized to call GetInferenceProfile` | The worker role needs `bedrock:GetInferenceProfile` (already granted in `infra/modules/iam`). |
 | `Invalid Bedrock Foundation Model Parser Provided` | Don't set a `parsing_configuration` pointing an embedding model as a parser — markdown needs only chunking. |
 | DM says "ask your project admin" for a real user | They're not in the SSM roster — add their user ID (step 7). |
 | Bot answers nobody after deploy | The roster seeds empty (`{"users":[]}`) and fails **closed** — populate it (step 7). |

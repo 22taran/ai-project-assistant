@@ -1,6 +1,6 @@
 import hashlib, hmac, time
 import sys, pathlib
-sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[2] / "lambda" / "ack"))
+sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[2] / "src" / "ack"))
 from slack_verify import verify
 
 SECRET = "s3cr3t"

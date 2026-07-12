@@ -68,8 +68,8 @@ module "slack_lambda" {
   generation_model_arn = local.generation_model_arn
   signing_secret_arn   = data.aws_secretsmanager_secret.signing.arn
   bot_token_arn        = data.aws_secretsmanager_secret.bot_token.arn
-  ack_source_dir       = "${path.root}/../../lambda/ack"
-  worker_source_dir    = "${path.root}/../../lambda/worker"
+  ack_source_dir       = "${path.root}/../../../src/ack"
+  worker_source_dir    = "${path.root}/../../../src/worker"
 }
 
 # --- Deferred grants attached at root to break the two module cycles ---

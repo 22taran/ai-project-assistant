@@ -2,25 +2,25 @@
 Shared pytest configuration for the whole-suite run.
 
 Both tests/ack/test_handler.py and tests/worker/test_handler.py insert their
-respective lambda/<component> directory onto sys.path and then do
+respective src/<component> directory onto sys.path and then do
 `importlib.import_module("handler")` to load the module under test (both
-files under test happen to be named `handler.py`, one per lambda).
+files under test happen to be named `handler.py`, one per Lambda).
 
 That per-file `sys.path.insert(0, ...)` runs at *collection* time (it's
 module-level code), so by the time pytest starts *running* tests, every test
 file in the suite has already inserted its directory. Whichever directory
 was inserted last ends up first on sys.path for the rest of the run,
 regardless of which test is actually executing next. That silently makes an
-ack test resolve `import_module("handler")` to lambda/worker/handler.py (or
+ack test resolve `import_module("handler")` to src/worker/handler.py (or
 vice versa) when the whole suite runs together, even though each test file
 passes fine in isolation.
 
 This autouse fixture repairs sys.path immediately before each test item
-runs: it promotes the lambda directory matching the *currently executing*
-test file's own subpackage (tests/ack -> lambda/ack, tests/worker ->
-lambda/worker) to the front of sys.path, and evicts any same-named module
+runs: it promotes the src directory matching the *currently executing*
+test file's own subpackage (tests/ack -> src/ack, tests/worker ->
+src/worker) to the front of sys.path, and evicts any same-named module
 already cached in sys.modules from the wrong directory. This does not touch
-any existing test file or lambda source file.
+any existing test file or Lambda source file.
 """
 import pathlib
 import sys
@@ -28,7 +28,7 @@ import sys
 import pytest
 
 _TESTS_ROOT = pathlib.Path(__file__).resolve().parent
-_LAMBDA_ROOT = _TESTS_ROOT.parent / "lambda"
+_LAMBDA_ROOT = _TESTS_ROOT.parent / "src"
 
 
 @pytest.fixture(autouse=True)

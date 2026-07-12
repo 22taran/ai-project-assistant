@@ -1,6 +1,6 @@
 import json, os, sys, types, pathlib
 from unittest.mock import MagicMock
-WORKER = pathlib.Path(__file__).resolve().parents[2] / "lambda" / "worker"
+WORKER = pathlib.Path(__file__).resolve().parents[2] / "src" / "worker"
 sys.path.insert(0, str(WORKER))
 
 def _load(monkeypatch, rag_return, post_mock):

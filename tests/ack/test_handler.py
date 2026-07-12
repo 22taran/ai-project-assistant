@@ -1,7 +1,7 @@
 import base64, json, hashlib, hmac, time, os, sys, pathlib
 from unittest.mock import MagicMock
 
-ACK_DIR = pathlib.Path(__file__).resolve().parents[2] / "lambda" / "ack"
+ACK_DIR = pathlib.Path(__file__).resolve().parents[2] / "src" / "ack"
 sys.path.insert(0, str(ACK_DIR))
 
 SECRET = "s3cr3t"
