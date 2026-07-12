@@ -41,4 +41,7 @@ resource "aws_s3vectors_index" "index" {
   dimension          = var.vector_dimension
   distance_metric    = "cosine"
   tags               = var.tags
+  metadata_configuration { # forces replacement
+    non_filterable_metadata_keys = ["AMAZON_BEDROCK_METADATA", "AMAZON_BEDROCK_TEXT"]
+  }
 }

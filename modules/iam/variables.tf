@@ -3,7 +3,7 @@ variable "tags" { type = map(string) }
 variable "docs_bucket_arn" { type = string }
 variable "vector_index_arn" { type = string }
 variable "embedding_model_arn" { type = string }
-variable "generation_model_arn" { type = string }
+variable "generation_model_arns" { type = list(string) }
 variable "signing_secret_arn" { type = string }
 variable "bot_token_arn" { type = string }
 # NOTE: no kb_arn / worker_function_arn here — those two grants are attached in

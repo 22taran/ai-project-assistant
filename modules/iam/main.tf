@@ -32,6 +32,7 @@ data "aws_iam_policy_document" "kb" {
       "s3vectors:GetVectors",
       "s3vectors:QueryVectors",
       "s3vectors:ListVectors",
+      "s3vectors:DeleteVectors",
     ]
     resources = [var.vector_index_arn]
   }
@@ -92,8 +93,8 @@ data "aws_iam_policy_document" "worker" {
   # avoid a cycle. Only the static-ARN grants live here.
   statement {
     sid       = "InvokeGenModel"
-    actions   = ["bedrock:InvokeModel"]
-    resources = [var.generation_model_arn]
+    actions   = ["bedrock:InvokeModel", "bedrock:GetInferenceProfile"]
+    resources = var.generation_model_arns
   }
   statement {
     sid       = "ReadBotToken"

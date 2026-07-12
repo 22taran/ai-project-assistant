@@ -28,7 +28,13 @@ variable "embedding_model_id" {
 
 variable "generation_model_id" {
   type    = string
-  default = "anthropic.claude-haiku-4-5-20251001-v1:0"
+  default = "amazon.nova-lite-v1:0"
+}
+
+variable "generation_inference_profile_id" {
+  type        = string
+  default     = "us.amazon.nova-lite-v1:0"
+  description = "Bedrock system-defined inference profile ID for the generation model (geo-prefixed). Used as the RetrieveAndGenerate modelArn."
 }
 
 variable "signing_secret_name" {

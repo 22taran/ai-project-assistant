@@ -1,4 +1,5 @@
 output "kb_role_arn" { value = aws_iam_role.kb.arn }
+output "kb_role_policy_id" { value = aws_iam_role_policy.kb.id }
 output "ack_role_arn" { value = aws_iam_role.ack.arn }
 output "worker_role_arn" { value = aws_iam_role.worker.arn }
 output "ack_role_name" { value = aws_iam_role.ack.name }

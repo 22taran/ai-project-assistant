@@ -24,6 +24,10 @@ Create two Secrets Manager secrets with the Slack signing secret and bot token:
     terraform init
     terraform apply
 
+IAM role propagation is eventually consistent, so a fresh `terraform apply` can
+occasionally fail on Bedrock KB creation with AccessDenied; if so, simply re-run
+`terraform apply` (no changes needed).
+
 ## Sync docs into the KB
 
     aws bedrock-agent start-ingestion-job \

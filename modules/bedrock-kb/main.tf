@@ -19,8 +19,8 @@ resource "aws_bedrockagent_knowledge_base" "this" {
   storage_configuration {
     type = "S3_VECTORS"
     s3_vectors_configuration {
-      vector_bucket_arn = var.vector_bucket_arn
       index_arn         = var.vector_index_arn
+      
     }
   }
 
@@ -37,12 +37,11 @@ resource "aws_bedrockagent_data_source" "s3" {
       bucket_arn = var.docs_bucket_arn
     }
   }
-
   vector_ingestion_configuration {
     chunking_configuration {
       chunking_strategy = "FIXED_SIZE"
       fixed_size_chunking_configuration {
-        max_tokens         = 500
+        max_tokens         = 512
         overlap_percentage = 20
       }
     }

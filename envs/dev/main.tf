@@ -23,20 +23,25 @@ data "aws_secretsmanager_secret" "bot_token" {
 }
 
 locals {
-  embedding_model_arn  = "arn:aws:bedrock:${var.aws_region}::foundation-model/${var.embedding_model_id}"
-  generation_model_arn = "arn:aws:bedrock:${var.aws_region}::foundation-model/${var.generation_model_id}"
+  embedding_model_arn = "arn:aws:bedrock:${var.aws_region}::foundation-model/${var.embedding_model_id}"
+  # Inference-profile ARN: Claude Haiku 4.5 rejects on-demand RetrieveAndGenerate
+  # with a bare foundation-model ARN, so this is the modelArn passed to the worker.
+  generation_model_arn = "arn:aws:bedrock:${var.aws_region}:${data.aws_caller_identity.current.account_id}:inference-profile/${var.generation_inference_profile_id}"
+  # Underlying foundation-model ARN(s) the inference profile routes to; region wildcard,
+  # specific model — needed so the worker's InvokeModel grant matches at runtime.
+  generation_foundation_model_arn = "arn:aws:bedrock:*::foundation-model/${var.generation_model_id}"
 }
 
 module "iam" {
-  source               = "../../modules/iam"
-  name_prefix          = local.name_prefix
-  tags                 = local.common_tags
-  docs_bucket_arn      = module.storage.docs_bucket_arn
-  vector_index_arn     = module.storage.vector_index_arn
-  embedding_model_arn  = local.embedding_model_arn
-  generation_model_arn = local.generation_model_arn
-  signing_secret_arn   = data.aws_secretsmanager_secret.signing.arn
-  bot_token_arn        = data.aws_secretsmanager_secret.bot_token.arn
+  source                = "../../modules/iam"
+  name_prefix           = local.name_prefix
+  tags                  = local.common_tags
+  docs_bucket_arn       = module.storage.docs_bucket_arn
+  vector_index_arn      = module.storage.vector_index_arn
+  embedding_model_arn   = local.embedding_model_arn
+  generation_model_arns = [local.generation_model_arn, local.generation_foundation_model_arn]
+  signing_secret_arn    = data.aws_secretsmanager_secret.signing.arn
+  bot_token_arn         = data.aws_secretsmanager_secret.bot_token.arn
 }
 
 module "bedrock_kb" {
@@ -48,7 +53,7 @@ module "bedrock_kb" {
   vector_bucket_arn   = module.storage.vector_bucket_arn
   vector_index_arn    = module.storage.vector_index_arn
   docs_bucket_arn     = module.storage.docs_bucket_arn
-  kb_role_policy_dep  = module.iam.kb_role_arn
+  kb_role_policy_dep  = module.iam.kb_role_policy_id
 }
 
 module "slack_lambda" {
