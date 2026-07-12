@@ -11,3 +11,6 @@ In addition to the interface described in the design doc, this module takes
 execution role, e.g. `module.iam.worker_role_name`. It's used directly as the
 `role` argument on the worker's DLQ-send inline policy, instead of deriving the
 role name from `worker_role_arn` via `split()`.
+
+- `ack_role_name` — ack role name; used to grant the ack Lambda read access to
+  the SSM roster parameter and the bot token (for the unauthorized reply).

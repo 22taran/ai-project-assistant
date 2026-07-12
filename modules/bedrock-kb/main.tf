@@ -19,8 +19,8 @@ resource "aws_bedrockagent_knowledge_base" "this" {
   storage_configuration {
     type = "S3_VECTORS"
     s3_vectors_configuration {
-      index_arn         = var.vector_index_arn
-      
+      index_arn = var.vector_index_arn
+
     }
   }
 

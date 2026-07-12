@@ -3,6 +3,11 @@ variable "tags" { type = map(string) }
 variable "ack_role_arn" { type = string }
 variable "worker_role_arn" { type = string }
 variable "worker_role_name" { type = string }
+
+variable "ack_role_name" {
+  type        = string
+  description = "Name of the ack Lambda IAM role (for inline roster/bot-token grants)."
+}
 variable "knowledge_base_id" { type = string }
 variable "generation_model_arn" { type = string }
 variable "signing_secret_arn" { type = string }

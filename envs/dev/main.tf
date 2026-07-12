@@ -61,6 +61,7 @@ module "slack_lambda" {
   name_prefix          = local.name_prefix
   tags                 = local.common_tags
   ack_role_arn         = module.iam.ack_role_arn
+  ack_role_name        = module.iam.ack_role_name
   worker_role_arn      = module.iam.worker_role_arn
   worker_role_name     = module.iam.worker_role_name
   knowledge_base_id    = module.bedrock_kb.knowledge_base_id
