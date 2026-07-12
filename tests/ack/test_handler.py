@@ -21,7 +21,8 @@ def _event(body_str, ts=None, sign=True):
 
 import urllib.parse as _uparse
 
-def _slash_event(command="/kt", text="deployment", user="U01"):
+def _slash_event(command="/kt", text="deployment", user="U01",
+                  content_type="application/x-www-form-urlencoded"):
     body = _uparse.urlencode({
         "command": command, "text": text, "user_id": user,
         "team_id": "T01", "channel_id": "C01",
@@ -33,7 +34,7 @@ def _slash_event(command="/kt", text="deployment", user="U01"):
         "headers": {
             "x-slack-signature": sig,
             "x-slack-request-timestamp": ts,
-            "content-type": "application/x-www-form-urlencoded",
+            "content-type": content_type,
         },
         "body": body,
         "isBase64Encoded": False,
@@ -210,3 +211,15 @@ def test_event_normalized_to_qa(monkeypatch):
     assert payload["text"] == "how does auth work"
     assert payload["reply"] == {"kind": "channel", "target": "D01"}
     assert payload["user"] == "U01"
+
+def test_slash_uppercase_content_type_still_routed(monkeypatch):
+    invoke = MagicMock()
+    h = _load_handler(monkeypatch, invoke, roster_users=("U01",))
+    resp = h.handler(
+        _slash_event(text="deployment", content_type="Application/X-WWW-Form-Urlencoded"),
+        None,
+    )
+    assert resp["statusCode"] == 200
+    invoke.assert_called_once()
+    payload = json.loads(invoke.call_args.kwargs["Payload"])
+    assert payload["mode"] == "kt"

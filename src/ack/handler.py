@@ -120,7 +120,7 @@ def handler(event, context):
     if not verify(_signing_secret(), ts, raw.encode(), sig):
         return {"statusCode": 401, "body": "invalid signature"}
 
-    if "application/x-www-form-urlencoded" in (_get(headers, "content-type") or ""):
+    if "application/x-www-form-urlencoded" in (_get(headers, "content-type") or "").lower():
         return _handle_slash(raw)
 
     try:
@@ -151,7 +151,7 @@ def handler(event, context):
             _post_message(
                 _bot_token(),
                 inner.get("channel"),
-                "You're not set up for the project assistant yet — ask your project admin to add you.",
+                _ASK_ADMIN,
             )
         except Exception:
             # Best-effort: don't let a slow/failed Slack or Secrets call error
