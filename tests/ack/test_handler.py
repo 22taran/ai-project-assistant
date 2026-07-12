@@ -60,3 +60,13 @@ def test_valid_event_invokes_worker_and_acks(monkeypatch):
     kwargs = invoke.call_args.kwargs
     assert kwargs["InvocationType"] == "Event"
     assert kwargs["FunctionName"] == "worker-fn"
+
+def test_slack_retry_is_acked_without_reinvoking(monkeypatch):
+    invoke = MagicMock()
+    h = _load_handler(monkeypatch, invoke)
+    body = json.dumps({"type": "event_callback", "event": {"text": "hi"}})
+    ev = _event(body)
+    ev["headers"]["x-slack-retry-num"] = "1"  # Slack marks re-deliveries
+    resp = h.handler(ev, None)
+    assert resp["statusCode"] == 200
+    invoke.assert_not_called()  # no duplicate worker invocation

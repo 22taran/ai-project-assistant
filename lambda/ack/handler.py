@@ -44,6 +44,12 @@ def handler(event, context):
     if payload.get("type") == "url_verification":
         return {"statusCode": 200, "body": json.dumps({"challenge": payload.get("challenge")})}
 
+    # Slack re-delivers an event if it doesn't get a 200 within 3s (e.g. a cold
+    # start). Retries carry X-Slack-Retry-Num; ack them without re-invoking the
+    # worker, otherwise one question yields duplicate answers.
+    if _get(headers, "x-slack-retry-num"):
+        return {"statusCode": 200, "body": "duplicate retry ignored"}
+
     boto3.client("lambda").invoke(
         FunctionName=os.environ["WORKER_FUNCTION_NAME"],
         InvocationType="Event",

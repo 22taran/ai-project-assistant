@@ -49,4 +49,6 @@ def handler(event, context):
         text += "\n\nSources:\n" + "\n".join(f"• {c}" for c in result["citations"])
 
     _post_message(_bot_token(), channel, text)
-    return {"ok": True}
+    # answer/citations echoed for direct (console/CLI) invokes; ignored by the
+    # ack Lambda's async invoke in production.
+    return {"ok": True, "answer": text, "citations": result["citations"]}
