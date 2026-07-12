@@ -127,6 +127,17 @@ def test_authorized_user_is_forwarded(monkeypatch):
     invoke.assert_called_once()
     h._post_message.assert_not_called()
 
+def test_roster_cached_within_ttl(monkeypatch):
+    invoke = MagicMock()
+    h = _load_handler(monkeypatch, invoke, roster_users=("U01",))
+    body = json.dumps({"type": "event_callback",
+                       "event": {"channel": "D01", "user": "U01", "text": "hi"}})
+    ev = _event(body)
+    h.handler(ev, None)
+    h.handler(_event(body), None)
+    fake_ssm = sys.modules["boto3"].client("ssm")
+    assert fake_ssm.get_parameter.call_count == 1  # second call served from cache
+
 def test_ssm_failure_denies(monkeypatch):
     invoke = MagicMock()
     h = _load_handler(monkeypatch, invoke, ssm_raises=True)
