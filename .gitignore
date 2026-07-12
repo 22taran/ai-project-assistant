@@ -20,3 +20,8 @@ __pycache__/
 # scratch
 .venv/
 .superpowers/
+
+# env / secrets
+.env
+*.env
+bootstrap/.env

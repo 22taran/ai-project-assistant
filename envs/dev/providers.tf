@@ -10,7 +10,14 @@ terraform {
       version = "~> 2.4"
     }
   }
-  # backend "s3" {}  # configure per-team; left local for first apply
+  # backend "s3" {} 
+  backend "s3" {
+    bucket       = "terraform-state-kt-assistant-ai-dev-20260711151252"
+    key          = "environments/dev/terraform.tfstate"
+    region       = "us-east-1"
+    encrypt      = true
+    use_lockfile = true
+  }
 }
 
 provider "aws" {
