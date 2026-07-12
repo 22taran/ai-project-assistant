@@ -1,6 +1,7 @@
 import json
 import os
 import time
+import urllib.parse
 
 import boto3
 
@@ -67,6 +68,46 @@ def _get(headers, key):
     return None
 
 
+def _ephemeral(text):
+    return {
+        "statusCode": 200,
+        "headers": {"Content-Type": "application/json"},
+        "body": json.dumps({"response_type": "ephemeral", "text": text}),
+    }
+
+
+def _invoke_worker(normalized):
+    boto3.client("lambda").invoke(
+        FunctionName=os.environ["WORKER_FUNCTION_NAME"],
+        InvocationType="Event",
+        Payload=json.dumps(normalized).encode(),
+    )
+
+
+_COMMAND_MODES = {"/kt": "kt"}
+_ASK_ADMIN = "You're not set up for the project assistant yet — ask your project admin to add you."
+
+
+def _handle_slash(raw):
+    form = urllib.parse.parse_qs(raw)
+
+    def f(k):
+        v = form.get(k, [""])
+        return v[0] if v else ""
+
+    user = f("user_id")
+    if user not in _roster():
+        print(f"unauthorized slash user {user} team {f('team_id')}")
+        return _ephemeral(_ASK_ADMIN)
+    _invoke_worker({
+        "mode": _COMMAND_MODES.get(f("command"), "qa"),
+        "text": f("text"),
+        "reply": {"kind": "response_url", "target": f("response_url")},
+        "user": user,
+    })
+    return _ephemeral("Looking into it…")
+
+
 def handler(event, context):
     headers = event.get("headers", {})
     raw = event.get("body", "") or ""
@@ -78,6 +119,9 @@ def handler(event, context):
     ts = _get(headers, "x-slack-request-timestamp")
     if not verify(_signing_secret(), ts, raw.encode(), sig):
         return {"statusCode": 401, "body": "invalid signature"}
+
+    if "application/x-www-form-urlencoded" in (_get(headers, "content-type") or ""):
+        return _handle_slash(raw)
 
     try:
         payload = json.loads(raw)
@@ -116,9 +160,10 @@ def handler(event, context):
             print("failed to post deny reply")
         return {"statusCode": 200, "body": "user not in roster"}
 
-    boto3.client("lambda").invoke(
-        FunctionName=os.environ["WORKER_FUNCTION_NAME"],
-        InvocationType="Event",
-        Payload=json.dumps(payload).encode(),
-    )
+    _invoke_worker({
+        "mode": "qa",
+        "text": inner.get("text", ""),
+        "reply": {"kind": "channel", "target": inner.get("channel")},
+        "user": user,
+    })
     return {"statusCode": 200, "body": ""}
