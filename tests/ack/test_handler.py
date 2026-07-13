@@ -19,6 +19,27 @@ def _event(body_str, ts=None, sign=True):
         "isBase64Encoded": False,
     }
 
+import urllib.parse as _uparse
+
+def _slash_event(command="/kt", text="deployment", user="U01",
+                  content_type="application/x-www-form-urlencoded"):
+    body = _uparse.urlencode({
+        "command": command, "text": text, "user_id": user,
+        "team_id": "T01", "channel_id": "C01",
+        "response_url": "https://hooks.slack.test/cmd",
+    })
+    ts = str(int(time.time()))
+    sig = "v0=" + hmac.new(SECRET.encode(), f"v0:{ts}:{body}".encode(), hashlib.sha256).hexdigest()
+    return {
+        "headers": {
+            "x-slack-signature": sig,
+            "x-slack-request-timestamp": ts,
+            "content-type": content_type,
+        },
+        "body": body,
+        "isBase64Encoded": False,
+    }
+
 def _load_handler(monkeypatch, fake_boto_invoke, roster_users=("U01",), ssm_raises=False):
     os.environ["SLACK_SIGNING_SECRET_ARN"] = "arn:secret"
     os.environ["WORKER_FUNCTION_NAME"] = "worker-fn"
@@ -156,3 +177,49 @@ def test_ssm_failure_denies(monkeypatch):
     resp = h.handler(_event(body), None)
     assert resp["statusCode"] == 200
     invoke.assert_not_called()  # fail closed
+
+def test_slash_kt_normalized_and_invoked(monkeypatch):
+    invoke = MagicMock()
+    h = _load_handler(monkeypatch, invoke, roster_users=("U01",))
+    resp = h.handler(_slash_event(text="deployment"), None)
+    assert resp["statusCode"] == 200
+    assert json.loads(resp["body"])["response_type"] == "ephemeral"
+    invoke.assert_called_once()
+    payload = json.loads(invoke.call_args.kwargs["Payload"])
+    assert payload["mode"] == "kt"
+    assert payload["text"] == "deployment"
+    assert payload["reply"] == {"kind": "response_url", "target": "https://hooks.slack.test/cmd"}
+    assert payload["user"] == "U01"
+
+def test_slash_unauthorized_user_not_invoked(monkeypatch):
+    invoke = MagicMock()
+    h = _load_handler(monkeypatch, invoke, roster_users=("U99",))
+    resp = h.handler(_slash_event(user="U01"), None)
+    assert resp["statusCode"] == 200
+    assert json.loads(resp["body"])["response_type"] == "ephemeral"  # ask-admin ephemeral
+    invoke.assert_not_called()
+
+def test_event_normalized_to_qa(monkeypatch):
+    invoke = MagicMock()
+    h = _load_handler(monkeypatch, invoke, roster_users=("U01",))
+    body = json.dumps({"type": "event_callback",
+                       "event": {"channel": "D01", "user": "U01", "text": "how does auth work"}})
+    resp = h.handler(_event(body), None)
+    assert resp["statusCode"] == 200
+    payload = json.loads(invoke.call_args.kwargs["Payload"])
+    assert payload["mode"] == "qa"
+    assert payload["text"] == "how does auth work"
+    assert payload["reply"] == {"kind": "channel", "target": "D01"}
+    assert payload["user"] == "U01"
+
+def test_slash_uppercase_content_type_still_routed(monkeypatch):
+    invoke = MagicMock()
+    h = _load_handler(monkeypatch, invoke, roster_users=("U01",))
+    resp = h.handler(
+        _slash_event(text="deployment", content_type="Application/X-WWW-Form-Urlencoded"),
+        None,
+    )
+    assert resp["statusCode"] == 200
+    invoke.assert_called_once()
+    payload = json.loads(invoke.call_args.kwargs["Payload"])
+    assert payload["mode"] == "kt"

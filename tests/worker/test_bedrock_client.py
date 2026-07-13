@@ -21,3 +21,25 @@ def test_returns_answer_and_citations():
     cfg = call["retrieveAndGenerateConfiguration"]["knowledgeBaseConfiguration"]
     assert cfg["knowledgeBaseId"] == "KB123"
     assert cfg["modelArn"] == "arn:model"
+
+def test_prompt_template_and_inference_added():
+    client = MagicMock()
+    client.retrieve_and_generate.return_value = {"output": {"text": "ok"}, "citations": []}
+    retrieve_and_generate(client, "KB1", "arn:model", "q",
+                          prompt_template="PROMPT $search_results$",
+                          temperature=0.2, max_tokens=256)
+    cfg = client.retrieve_and_generate.call_args.kwargs[
+        "retrieveAndGenerateConfiguration"]["knowledgeBaseConfiguration"]
+    gen = cfg["generationConfiguration"]
+    assert gen["promptTemplate"]["textPromptTemplate"] == "PROMPT $search_results$"
+    tic = gen["inferenceConfig"]["textInferenceConfig"]
+    assert tic["temperature"] == 0.2
+    assert tic["maxTokens"] == 256
+
+def test_no_generation_config_when_defaults():
+    client = MagicMock()
+    client.retrieve_and_generate.return_value = {"output": {"text": "ok"}, "citations": []}
+    retrieve_and_generate(client, "KB1", "arn:model", "q")  # no prompt/inference
+    cfg = client.retrieve_and_generate.call_args.kwargs[
+        "retrieveAndGenerateConfiguration"]["knowledgeBaseConfiguration"]
+    assert "generationConfiguration" not in cfg

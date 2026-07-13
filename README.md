@@ -229,6 +229,16 @@ for stronger). Embedding model stays Titan v2, so **no re-ingestion** is needed 
 
 ---
 
+## Data & privacy
+
+Your data stays inside your AWS account and Region.
+
+- **Not used for training, not shared.** Per [AWS Bedrock data protection](https://docs.aws.amazon.com/bedrock/latest/userguide/data-protection.html), model providers (Anthropic, the Nova team) have no access to your prompts, completions, or logs; inputs/outputs are not used to train models or shared with third parties.
+- **Everything is in-account:** docs (S3), embeddings (Titan v2, in-account), vectors (S3 Vectors), generation (Nova Lite, in-account), roster (SSM), secrets (Secrets Manager). Encrypted in transit (TLS) and at rest; Bedrock inference is stateless.
+- **The one external surface is Slack** — question and answer text pass through your Slack workspace (under your Slack agreement). If a question is too sensitive for a Slack DM, it's too sensitive here.
+- **Logging is off by default.** Bedrock model-invocation logging is opt-in; if enabled it writes to *your own* S3/CloudWatch. Automated AWS abuse detection stays within AWS and is not shared with providers.
+- **Optional hardening:** add a VPC endpoint (PrivateLink) so Bedrock traffic never touches the public internet, and enable CloudTrail for audit.
+
 ## Scope
 
 - **Phase 1–6 built:** Bedrock KB over S3 Vectors + Slack channel mentions + private
