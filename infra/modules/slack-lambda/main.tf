@@ -51,6 +51,10 @@ resource "aws_lambda_function" "worker" {
       KNOWLEDGE_BASE_ID    = var.knowledge_base_id
       GENERATION_MODEL_ARN = var.generation_model_arn
       BOT_TOKEN_ARN        = var.bot_token_arn
+      ASSISTANT_PROMPT     = var.assistant_prompt
+      KT_PROMPT            = var.kt_prompt
+      GEN_TEMPERATURE      = tostring(var.gen_temperature)
+      GEN_MAX_TOKENS       = tostring(var.gen_max_tokens)
     }
   }
   depends_on = [aws_cloudwatch_log_group.worker]

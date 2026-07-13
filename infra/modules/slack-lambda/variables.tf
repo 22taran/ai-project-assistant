@@ -19,3 +19,23 @@ variable "log_retention_days" {
   type    = number
   default = 14
 }
+
+variable "assistant_prompt" {
+  type        = string
+  description = "Prompt template for default Q&A mode (must contain $search_results$)."
+}
+
+variable "kt_prompt" {
+  type        = string
+  description = "Prompt template for /kt overview mode (must contain $search_results$)."
+}
+
+variable "gen_temperature" {
+  type    = number
+  default = 0.2
+}
+
+variable "gen_max_tokens" {
+  type    = number
+  default = 512
+}

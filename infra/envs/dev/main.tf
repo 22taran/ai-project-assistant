@@ -70,6 +70,10 @@ module "slack_lambda" {
   bot_token_arn        = data.aws_secretsmanager_secret.bot_token.arn
   ack_source_dir       = "${path.root}/../../../src/ack"
   worker_source_dir    = "${path.root}/../../../src/worker"
+  assistant_prompt     = var.assistant_prompt
+  kt_prompt            = var.kt_prompt
+  gen_temperature      = var.gen_temperature
+  gen_max_tokens       = var.gen_max_tokens
 }
 
 # --- Deferred grants attached at root to break the two module cycles ---
