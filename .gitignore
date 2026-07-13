@@ -25,3 +25,6 @@ __pycache__/
 .env
 *.env
 bootstrap/.env
+
+# design process artifacts (kept local, not published)
+docs/superpowers/

@@ -239,6 +239,10 @@ Your data stays inside your AWS account and Region.
 - **Logging is off by default.** Bedrock model-invocation logging is opt-in; if enabled it writes to *your own* S3/CloudWatch. Automated AWS abuse detection stays within AWS and is not shared with providers.
 - **Optional hardening:** add a VPC endpoint (PrivateLink) so Bedrock traffic never touches the public internet, and enable CloudTrail for audit.
 
+## License
+
+MIT — see [LICENSE](LICENSE).
+
 ## Scope
 
 - **Phase 1–6 built:** Bedrock KB over S3 Vectors + Slack channel mentions + private
