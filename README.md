@@ -12,6 +12,8 @@ Terraform.
 
 ## How it works
 
+![Architecture](docs/AI-Project_Assistant.png)
+
 ### Runtime — a question, answered
 
 ```
